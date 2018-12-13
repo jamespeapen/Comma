@@ -7,57 +7,75 @@ from timestamp import Timestamp
 import box_list
 import os
 import sys
+from gui import *
 
-times = []
-def get_times(box_file):
-    '''adds each timestamp from a file as an object to list'''
-    with open(box_file) as file:
-        for line in file:
-            time = Timestamp(line)
-            times.append(time)
+class Converter:
+    
+    def __init__(self):
+        '''initialize variables in use'''
+        self.bad_count = 0 #number of bad files found
+        self.times = [] #list of string objects in the Timestamp class; deleted after each file is worked with
+        self.lst = [] #list of files selected by user from gui
+        self.bad_year = '' #filename of each file with bad year
 
-def write_times(new_csv_file):
-    '''writes each csv timestamp to the new csv file'''
-    with open(new_csv_file, 'w+') as csv:
-        csv.write(str('PIT, antenna, month, date, year, hour, minute, second,\n'))
-        for time in times:
-            csv.write(str(time.get_timestamp_csv() + '\n'))
-
-def filenames(box_file):
-    '''creates a new filename for the new csv file'''
-    for char in box_file:
-        if char == '.':
-            index = box_file.index(char)
-    csv_filename = str(box_file[:index] + '.csv')
-    return csv_filename    
+    def get_times(self, box_file):
+        '''adds each line from input file as an object to list'''
+        del self.times[:] #clear the list of timestamp objects
+        with open(box_file) as file:
+            for line in file:
+                time = Timestamp(line)
+                self.times.append(time)
+    
+    def write_times(self, new_csv_file):
+        '''writes each comma separated string to the new csv file'''
+        with open(new_csv_file, 'w+') as csv:
+            csv.write(str('PIT, antenna, month, date, year, hour, minute, second,\n'))
+            for time in self.times:
+                csv.write(str(time.get_timestamp_csv() + '\n'))
+    
+    def filenames(self, box_file):
+        '''creates a filename with .csv suffix using original filename'''
+        for char in box_file:
+            if char == '.':
+                index = box_file.index(char)
+        csv_filename = str(box_file[:index] + '.csv')
+        return csv_filename    
             
-def make_csv(box_file):
-    '''calls get_times and write_times'''
-    get_times(box_file)
-    write_times(filenames(box_file))
-    print(str(box_file) + ' converted')
+    def check_bad(self, box_file, year):
+        '''writes filenames of box files that have the wrong year by checking against 
+        correct year received from user input in gui'''
+        if len(self.lst) == 0:
+            raise ValueError('No files selected')
+        
+        if len(year) < 4:
+            raise ValueError("No year entered to check against")
+        
+        self.get_times(box_file)
+        count = 0
+        with open('bad_year.txt', 'a') as bad_file:
+            for time in self.times:
+                self.bad_year = ''
+                if time.year != year:
+                    count += 1
+            if count > 1:
+                bad_file.write(str(box_file) + '\n')
+                self.bad_count += 1
+                print('Bad year: ', box_file, file = sys.stderr)
+                self.bad_year = str(box_file) + '\n'
+                
+    def make_csv(self, box_file):
+        '''calls get_times and write_times'''
+        if len(self.lst) == 0:
+            raise ValueError('No files selected')
+        self.get_times(box_file)
+        self.write_times(self.filenames(box_file))
+        del self.times[:]
 
-def check_bad(box_file):
-    '''writes filenames of box files that have the wrong year'''
-    get_times(box_file)
-    count = 0
-    with open('bad_year.txt', 'a') as bad_file:
-        for time in times:
-            if time.year != '2018' or int(time.month) < 5:
-                count += 1
-        if count > 1:
-            bad_file.write(str(box_file) + '\n')
-            print('Bad year: ', box_file, file = sys.stderr)
 
-def driver(self):
-    for each in box_list.names:
-        make_csv(each)
-        check_bad(each)
-        del times[:]     
+    def files(self):
+        if len(self.lst) == 0:
+            raise ValueError('No files selected')
+    
 
-if __name__ == '__main__':
-            
-    for each in box_list.names:
-        make_csv(each)
-        check_bad(each)
-        del times[:] 
+#if __name__ == '__main__':
+    
