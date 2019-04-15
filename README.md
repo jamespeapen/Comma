@@ -1,5 +1,5 @@
 # Comma
-Read timestamp files from ETAG RFID boards and convert them into csv format: 
+Read timestamp files from ETAG RFID boards and convert them into csv format, checking if the dates are from the current year
 PIT, antenna, date, month, year, hour, minute, second 
 
 '011016DCB7,1,6/13/2016 9:32:35' would convert to 
